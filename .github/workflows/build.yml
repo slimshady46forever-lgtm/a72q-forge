@@ -24,17 +24,20 @@ jobs:
       - name: Toolchains
         run: |
           T="$(dirname "$GITHUB_WORKSPACE")/../toolchains"
+          echo "TOOLCHAINS=$T" >> "$GITHUB_ENV"
           mkdir -p "$T/clang/clang-r383902" "$T/gcc"
           curl -fL -o /tmp/clang.tar.gz "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/android-11.0.0_r48/clang-r383902.tar.gz"
           tar -xzf /tmp/clang.tar.gz -C "$T/clang/clang-r383902"
           git clone --depth 1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 "$T/gcc/aarch64"
           git clone --depth 1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 "$T/gcc/arm"
-          ls "$T/clang/clang-r383902/bin/clang" "$T/gcc/aarch64/bin/aarch64-linux-android-gcc" "$T/gcc/arm/bin/arm-linux-androideabi-gcc"
+          ls "$T/clang/clang-r383902/bin/clang" "$T/gcc/aarch64/bin/aarch64-linux-android-ld" "$T/gcc/arm/bin/arm-linux-androideabi-gcc"
 
       - name: Build
         run: |
           chmod +x build_a72q.sh
+          sed -i "s|\.\./\.\./toolchains|$TOOLCHAINS|g" build_a72q.sh
           sed -i 's/-j16/-j"$(nproc)"/' build_a72q.sh
+          head -5 build_a72q.sh
           ./build_a72q.sh
 
       - name: Package
