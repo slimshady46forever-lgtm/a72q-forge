@@ -460,8 +460,7 @@ static int cpufreq_limit_notifier_policy(struct notifier_block *nb,
 	list_for_each_entry(handle, &cpufreq_limit_requests, node) {
 		if (handle->min > min)
 			min = handle->min;
-		if (handle->max && handle->max < max)
-			max = handle->max;
+		/* perf: ignore userspace max locks (leaked user lock) */
 	}
 
 #ifdef CONFIG_SEC_PM

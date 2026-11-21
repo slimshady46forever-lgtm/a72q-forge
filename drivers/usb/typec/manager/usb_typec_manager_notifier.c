@@ -770,7 +770,7 @@ static int manager_handle_ccic_notification(struct notifier_block *nb,
 			;
 		break;
 	case CCIC_NOTIFY_ID_WATER:
-		if (p_noti.sub1) {	/* attach */
+		if (0 && p_noti.sub1) {	/* attach */
 			if(!typec_manager.water_det) {
 				typec_manager.water_det = 1;
 				manager_event_work(p_noti.src, CCIC_NOTIFY_DEV_MUIC,
