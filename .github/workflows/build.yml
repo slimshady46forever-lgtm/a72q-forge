@@ -51,6 +51,7 @@ jobs:
                   out.append(line)
           open(p, 'w').write('\n'.join(out) + '\n')
           PY
+          printf '%s\n' '#include <linux/module.h>' 'int ksu_observer_init(void) { return 0; }' 'void ksu_observer_exit(void) {}' > KernelSU/kernel/pkg_observer.c
 
       - name: Build
         run: |
