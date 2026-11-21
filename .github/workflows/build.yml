@@ -71,6 +71,9 @@ jobs:
 
           echo "ccflags-y += -DKSU_COMPAT_HAS_CURRENT_SID" >> KernelSU/kernel/Makefile
       - name: Build
+        env:
+          KBUILD_BUILD_USER: android
+          KBUILD_BUILD_HOST: localhost
         run: |
           chmod +x build_a72q.sh
           sed -i "s|\.\./\.\./toolchains|$TOOLCHAINS|g" build_a72q.sh
