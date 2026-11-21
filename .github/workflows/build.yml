@@ -36,32 +36,37 @@ jobs:
         run: |
           git -C KernelSU fetch --unshallow --tags 2>/dev/null || true
           python3 - <<'PY'
+          import os
           p = 'KernelSU/kernel/ksu.c'
-          s = open(p).read()
-          if '#include <linux/version.h>' not in s:
-              s = s.replace('#include <linux/module.h>',
-                            '#include <linux/module.h>\n#include <linux/version.h>', 1)
-          out = []
-          for line in s.splitlines():
-              if line.startswith('MODULE_IMPORT_NS'):
-                  out.append('#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 0)')
-                  out.append(line)
-                  out.append('#endif')
-              else:
-                  out.append(line)
-          open(p, 'w').write('\n'.join(out) + '\n')
-          PY
-          printf '%s\n' '#include <linux/module.h>' 'int ksu_observer_init(void) { return 0; }' 'void ksu_observer_exit(void) {}' > KernelSU/kernel/pkg_observer.c
-          python3 - <<'PY'
+          if os.path.exists(p):
+              s = open(p).read()
+              if '#include <linux/version.h>' not in s:
+                  s = s.replace('#include <linux/module.h>',
+                                '#include <linux/module.h>\n#include <linux/version.h>', 1)
+              out = []
+              for line in s.splitlines():
+                  if line.startswith('MODULE_IMPORT_NS'):
+                      out.append('#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 0)')
+                      out.append(line)
+                      out.append('#endif')
+                  else:
+                      out.append(line)
+              open(p, 'w').write('\n'.join(out) + '\n')
+          p = 'KernelSU/kernel/pkg_observer.c'
+          if os.path.exists(p):
+              open(p, 'w').write('#include <linux/module.h>\n'
+                                 'int ksu_observer_init(void) { return 0; }\n'
+                                 'void ksu_observer_exit(void) {}\n')
           p = 'KernelSU/kernel/core_hook.c'
-          s = open(p).read()
-          if '#include <linux/version.h>' not in s:
-              s = '#include <linux/version.h>\n' + s
-          s = s.replace('atomic_set(&current->seccomp.filter_count, 0);',
-                        '#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 17, 0)\n    atomic_set(&current->seccomp.filter_count, 0);\n#endif')
-          s = s.replace('task_work_add(current, &tw->cb, TWA_RESUME)',
-                        'task_work_add(current, &tw->cb, true)')
-          open(p, 'w').write(s)
+          if os.path.exists(p):
+              s = open(p).read()
+              if '#include <linux/version.h>' not in s:
+                  s = '#include <linux/version.h>\n' + s
+              s = s.replace('atomic_set(&current->seccomp.filter_count, 0);',
+                            '#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 17, 0)\n    atomic_set(&current->seccomp.filter_count, 0);\n#endif')
+              s = s.replace('task_work_add(current, &tw->cb, TWA_RESUME)',
+                            'task_work_add(current, &tw->cb, true)')
+              open(p, 'w').write(s)
           PY
 
       - name: Build
