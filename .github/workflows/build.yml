@@ -69,7 +69,7 @@ jobs:
               open(p, 'w').write(s)
           PY
 
-          echo "ccflags-y += -DKSU_COMPAT_HAS_CURRENT_SID" >> KernelSU/kernel/selinux/Makefile
+          echo "ccflags-y += -DKSU_COMPAT_HAS_CURRENT_SID" >> KernelSU/kernel/Makefile
       - name: Build
         run: |
           chmod +x build_a72q.sh
