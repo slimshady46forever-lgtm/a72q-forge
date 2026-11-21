@@ -1,0 +1,54 @@
+name: build-a72q
+
+on:
+  push:
+    branches: [rise-14-ksu]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 240
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: recursive
+
+      - name: Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc bison flex libssl-dev device-tree-compiler libelf-dev
+
+      - name: Toolchains
+        run: |
+          T="$(dirname "$GITHUB_WORKSPACE")/../toolchains"
+          mkdir -p "$T/clang/clang-r383902" "$T/gcc/aarch64" "$T/gcc/arm"
+          curl -fL -o /tmp/clang.tar.gz "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/android-11.0.0_r48/clang-r383902.tar.gz"
+          tar -xzf /tmp/clang.tar.gz -C "$T/clang/clang-r383902"
+          curl -fL -o /tmp/gcc64.tar.gz "https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/+archive/refs/heads/master.tar.gz"
+          tar -xzf /tmp/gcc64.tar.gz -C "$T/gcc/aarch64"
+          curl -fL -o /tmp/gcc32.tar.gz "https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/+archive/refs/heads/master.tar.gz"
+          tar -xzf /tmp/gcc32.tar.gz -C "$T/gcc/arm"
+          ls "$T/clang/clang-r383902/bin/clang" "$T/gcc/aarch64/bin/aarch64-linux-android-gcc" "$T/gcc/arm/bin/arm-linux-androideabi-gcc"
+
+      - name: Build
+        run: |
+          chmod +x build_a72q.sh
+          sed -i 's/-j16/-j"$(nproc)"/' build_a72q.sh
+          ./build_a72q.sh
+
+      - name: Package
+        run: |
+          ls -l out/arch/arm64/boot/ || true
+          mkdir -p artifact
+          cp out/arch/arm64/boot/Image* artifact/ 2>/dev/null || true
+          find out/arch/arm64/boot/dts -name '*.dtb' -exec cp {} artifact/ \; 2>/dev/null || true
+          ls -l artifact/
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-${{ github.sha }}
+          path: artifact/
