@@ -2,7 +2,7 @@ name: build-a72q
 
 on:
   push:
-    branches: [rise-14-ksu]
+    branches: [rise-14-ksu, stealth-kernel]
   workflow_dispatch:
 
 jobs:
