@@ -52,6 +52,17 @@ jobs:
           open(p, 'w').write('\n'.join(out) + '\n')
           PY
           printf '%s\n' '#include <linux/module.h>' 'int ksu_observer_init(void) { return 0; }' 'void ksu_observer_exit(void) {}' > KernelSU/kernel/pkg_observer.c
+          python3 - <<'PY'
+          p = 'KernelSU/kernel/core_hook.c'
+          s = open(p).read()
+          if '#include <linux/version.h>' not in s:
+              s = '#include <linux/version.h>\n' + s
+          s = s.replace('atomic_set(&current->seccomp.filter_count, 0);',
+                        '#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 17, 0)\n    atomic_set(&current->seccomp.filter_count, 0);\n#endif')
+          s = s.replace('task_work_add(current, &tw->cb, TWA_RESUME)',
+                        'task_work_add(current, &tw->cb, true)')
+          open(p, 'w').write(s)
+          PY
 
       - name: Build
         run: |
