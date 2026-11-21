@@ -32,12 +32,31 @@ jobs:
           git clone --depth 1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 "$T/gcc/arm"
           ls "$T/clang/clang-r383902/bin/clang" "$T/gcc/aarch64/bin/aarch64-linux-android-ld" "$T/gcc/arm/bin/arm-linux-androideabi-gcc"
 
+      - name: Patch KernelSU for 4.14
+        run: |
+          git -C KernelSU fetch --unshallow --tags 2>/dev/null || true
+          python3 - <<'PY'
+          p = 'KernelSU/kernel/ksu.c'
+          s = open(p).read()
+          if '#include <linux/version.h>' not in s:
+              s = s.replace('#include <linux/module.h>',
+                            '#include <linux/module.h>\n#include <linux/version.h>', 1)
+          out = []
+          for line in s.splitlines():
+              if line.startswith('MODULE_IMPORT_NS'):
+                  out.append('#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 0)')
+                  out.append(line)
+                  out.append('#endif')
+              else:
+                  out.append(line)
+          open(p, 'w').write('\n'.join(out) + '\n')
+          PY
+
       - name: Build
         run: |
           chmod +x build_a72q.sh
           sed -i "s|\.\./\.\./toolchains|$TOOLCHAINS|g" build_a72q.sh
           sed -i 's/-j16/-j"$(nproc)"/' build_a72q.sh
-          head -5 build_a72q.sh
           ./build_a72q.sh
 
       - name: Package
