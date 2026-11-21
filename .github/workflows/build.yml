@@ -24,13 +24,11 @@ jobs:
       - name: Toolchains
         run: |
           T="$(dirname "$GITHUB_WORKSPACE")/../toolchains"
-          mkdir -p "$T/clang/clang-r383902" "$T/gcc/aarch64" "$T/gcc/arm"
+          mkdir -p "$T/clang/clang-r383902" "$T/gcc"
           curl -fL -o /tmp/clang.tar.gz "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/android-11.0.0_r48/clang-r383902.tar.gz"
           tar -xzf /tmp/clang.tar.gz -C "$T/clang/clang-r383902"
-          curl -fL -o /tmp/gcc64.tar.gz "https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/+archive/refs/heads/master.tar.gz"
-          tar -xzf /tmp/gcc64.tar.gz -C "$T/gcc/aarch64"
-          curl -fL -o /tmp/gcc32.tar.gz "https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/+archive/refs/heads/master.tar.gz"
-          tar -xzf /tmp/gcc32.tar.gz -C "$T/gcc/arm"
+          git clone --depth 1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 "$T/gcc/aarch64"
+          git clone --depth 1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 "$T/gcc/arm"
           ls "$T/clang/clang-r383902/bin/clang" "$T/gcc/aarch64/bin/aarch64-linux-android-gcc" "$T/gcc/arm/bin/arm-linux-androideabi-gcc"
 
       - name: Build
